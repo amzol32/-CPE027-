@@ -1,0 +1,10 @@
+build/
+results/
+__pycache__/
+*.pyc
+.venv/
+# Wi-Fi credentials never go to GitHub
+firmware/soil_dsp/secrets.h
+# real measurement logs are tracked deliberately in data/runs/ (see docs/ITERATIONS.md); scratch logs are not
+data/*.csv
+.DS_Store
