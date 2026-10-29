@@ -1,4 +1,4 @@
-.PHONY: test unit sim synth crosscheck firmware-check clean
+.PHONY: test unit sim synth crosscheck firmware-check dashboard clean
 
 PY ?= python3
 CXX ?= g++
@@ -33,6 +33,11 @@ synth: build
 crosscheck: build
 	$(PY) analysis/crosscheck.py --log data/synthetic/synthetic_steady.csv --cal data/synthetic/calibration.json
 	$(PY) analysis/crosscheck.py --log data/synthetic/synthetic_pump.csv   --cal data/synthetic/calibration.json
+
+# Optional (needs node + playwright): serve the real dashboard page with a replayed log and check it in Chromium
+dashboard: build
+	$(PY) tests/dashboard_mock.py --port 8099 > build/mock.log 2>&1 & echo $$! > build/mock.pid; sleep 2; \
+	node tests/dashboard_check.js http://localhost:8099/ build; rc=$$?; kill `cat build/mock.pid`; exit $$rc
 
 clean:
 	rm -rf build results

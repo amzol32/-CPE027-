@@ -67,16 +67,26 @@ function dl(){let r=["t_s,s1,s2,s3,pump"];for(let i=0;i<H.t.length;i++)r.push([H
 const b=new Blob([r.join("\n")+"\n"],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="soil_log.csv";a.click()}
 function sp(){api('/api/params?thdry='+$('pd').value+'&h='+$('ph').value+'&thwet='+$('pw').value+'&tmax='+$('pt').value+'&lock='+$('pl').value+'&blank='+$('pb').value)}
 let filled=false;
-function draw(){const c=$('c'),g=c.getContext('2d'),W=c.width,Hh=c.height,L=40,B=20,T=8,R=8;g.clearRect(0,0,W,Hh);
-const n=H.t.length;let lo=0,hi=100;if(n){const all=H.x.concat(H.y);lo=Math.max(0,Math.floor(Math.min(...all,S.thdry||100)-5));hi=Math.min(100,Math.ceil(Math.max(...all,S.thwet||0)+5));if(hi-lo<10)hi=lo+10}
+function draw(){const c=$('c'),dpr=window.devicePixelRatio||1,cw=c.clientWidth||960,ch=c.clientHeight||280;
+if(c.width!==Math.round(cw*dpr)||c.height!==Math.round(ch*dpr)){c.width=Math.round(cw*dpr);c.height=Math.round(ch*dpr)}
+const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);const W=cw,Hh=ch,L=34,B=20,T=8,R=8;g.clearRect(0,0,W,Hh);
+// y range follows the data (so the fluctuation is visible); a threshold is drawn only when it is near the data
+const n=H.t.length;let lo=0,hi=100;if(n){const all=H.x.concat(H.y,H.ma);const mn=Math.min(...all),mx=Math.max(...all);
+lo=Math.max(0,Math.floor(mn-3));hi=Math.min(100,Math.ceil(mx+3));
+if(S.thdry!=null&&S.thdry>=mn-15&&S.thdry<=mx+15){lo=Math.min(lo,Math.floor(S.thdry-2));hi=Math.max(hi,Math.ceil(S.thdry+2))}
+if(S.thwet!=null&&S.thwet>=mn-15&&S.thwet<=mx+15){lo=Math.min(lo,Math.floor(S.thwet-2));hi=Math.max(hi,Math.ceil(S.thwet+2))}
+lo=Math.max(0,lo);hi=Math.min(100,hi);if(hi-lo<6){const m=(hi+lo)/2;lo=Math.max(0,m-3);hi=lo+6}}
 const X=i=>L+(W-L-R)*(n>1?i/(n-1):0),Y=v=>T+(Hh-T-B)*(1-(v-lo)/(hi-lo));
 g.strokeStyle='#2a352a';g.fillStyle='#93a08e';g.font='11px system-ui';g.lineWidth=1;
 for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4,y=Y(v);g.beginPath();g.moveTo(L,y);g.lineTo(W-R,y);g.stroke();g.fillText(v.toFixed(0),4,y+4)}
 function line(a,col,w){g.strokeStyle=col;g.lineWidth=w;g.beginPath();a.forEach((v,i)=>{i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v))});g.stroke()}
-function hl(v,col){if(v==null)return;g.strokeStyle=col;g.setLineDash([6,4]);g.lineWidth=1.2;g.beginPath();g.moveTo(L,Y(v));g.lineTo(W-R,Y(v));g.stroke();g.setLineDash([])}
-hl(S.thdry,'#e06c5a');hl(S.thwet,'#6fa8dc');
+const off=[];function hl(v,col,name){if(v==null)return;if(v<lo||v>hi){off.push(name+' '+v+(v>hi?' (above)':' (below)'));return}
+g.strokeStyle=col;g.setLineDash([6,4]);g.lineWidth=1.2;g.beginPath();g.moveTo(L,Y(v));g.lineTo(W-R,Y(v));g.stroke();g.setLineDash([])}
+hl(S.thdry,'#e06c5a','θdry');hl(S.thwet,'#6fa8dc','θwet');
 if(n){line(H.x,'#93a08e',1);line(H.ma,'#e0a040',1.4);line(H.y,'#7fbf6a',2.2);
-g.fillStyle='#93a08e';g.fillText('t = '+H.t[0]+' ... '+H.t[n-1]+' s',L,Hh-4)}}
+g.fillStyle='#93a08e';g.fillText('t = '+H.t[0]+' ... '+H.t[n-1]+' s',L,Hh-4);
+if(off.length){g.textAlign='right';g.fillText(off.join('   '),W-R,T+10);g.textAlign='left'}}}
+window.addEventListener('resize',draw);
 function upd(s){S=s;push(s);if(H.t.length>MAXV)for(const k in H)H[k].shift();
 const col={DRY:'#e06c5a',OK:'#7fbf6a',WET:'#6fa8dc'}[s.status];$('status').textContent=s.status;$('status').style.color=col;
 $('y').textContent=s.y.toFixed(1);$('x').textContent=s.x.toFixed(1);

@@ -7,6 +7,8 @@
 #include <cstdarg>
 #include <functional>
 #include <string>
+#include <unistd.h>   // the real ESP32 core pulls this in (it declares pipe(), read(), write()...), so name clashes show up here too
+#include <math.h>
 #define LOW 0
 #define HIGH 1
 #define OUTPUT 1

@@ -18,7 +18,8 @@ CPE 027 DSP project: *Two-Stage Median and Exponential Smoothing of Multi-Sensor
 | `firmware/legacy_readout/` | Your original 3-sensor read-out sketch (iteration 0, kept for reference). |
 | `analysis/analyze_log.py` | Computes Tables 6-1, 6-2, 6-3, the pump-interference table, Fig 6-1, Fig 6-2 from the logged CSV. |
 | `analysis/dsp_ref.py` | Python version of the same filters. `crosscheck.py` proves it matches the firmware C++. |
-| `tests/` | C++ unit tests for `dsp.h`, plus a host simulation that runs the real `.ino` against scripted sensor values. |
+| `firmware/prebuilt/` | Ready-to-flash image (compiled with esp32 core 3.0.7, ESP32S3 Dev Module defaults). Use it if the Arduino IDE gives you trouble. |
+| `tests/` | C++ unit tests for `dsp.h`, a host simulation that runs the real `.ino` against scripted sensor values, and a browser check of the dashboard (`dashboard_mock.py` + `dashboard_check.js`). |
 | `docs/WORKFLOW.md` | The final DSP thought process (slide-ready) and the 3-sensor version of the problem statement/objectives. |
 | `docs/PAPER_PATCHES.md` | Exact edits and fill-in mapping for the DSP report. |
 | `docs/ITERATIONS.md` | Iteration plan, milestones, branch model. `scripts/bootstrap_github.sh` creates the issues and milestones. |
@@ -47,9 +48,9 @@ Checks before powering up:
 
 ## First run (20 minutes)
 
-1. Arduino IDE (or arduino-cli) with the **esp32 core 3.x**; install libraries *Adafruit GFX Library* and *Adafruit ST7735 and ST7789 Library*.
+1. Arduino IDE (or arduino-cli) with the **esp32 core 3.x** (verified on 3.0.7); install libraries *Adafruit GFX Library* and *Adafruit ST7735 and ST7789 Library*. In a hurry? Flash `firmware/prebuilt/` instead (see its README).
 2. Optional: copy `firmware/soil_dsp/secrets.example.h` to `secrets.h` and fill in your Wi-Fi. With no `secrets.h` (or no network) the board creates its own access point: SSID `SoilDSP`, password `soildsp123`, page at `http://192.168.4.1/`.
-3. Board: *ESP32S3 Dev Module*. Open `firmware/soil_dsp/soil_dsp.ino`, upload, open the serial monitor at 115200.
+3. Board: *ESP32S3 Dev Module*, leave **USB CDC On Boot: Disabled** (the default). Plug into the board's **UART/COM** USB port, not the native **USB** port: GPIO20 (the relay) is the native port's D+ line, and with CDC disabled `Serial` goes to the UART port. Open `firmware/soil_dsp/soil_dsp.ino`, upload, open the serial monitor at 115200.
 4. The pump is **disabled at boot** and locked until both calibrations exist. Press `d` in the serial monitor with all three probes in air, then `w` with all three in water up to the line (60 s each; the same buttons are on the dashboard). Values are stored in flash.
 5. Open the dashboard (IP is on the TFT and in the serial log). Enable pump control from the dashboard or with `e` once the thresholds are right for your medium.
 
@@ -98,7 +99,17 @@ The script also prints an extra row, a moving average with M = 19. An EMA with Î
 
 ```bash
 make test        # C++ unit tests, firmware host simulation, synthetic end-to-end, firmware/python cross-check
+make dashboard   # optional: real dashboard page in Chromium against a replayed log (needs node + playwright)
 ```
+
+What has been verified, and what has not:
+
+| Check | Status |
+|---|---|
+| DSP core unit tests, host simulation of the `.ino`, firmware vs Python cross-check | pass |
+| Compile for ESP32-S3 with the real Espressif toolchain (core 3.0.7, `--warnings all`) | pass, 0 warnings, 75% flash, 15% RAM |
+| Dashboard in Chromium (laptop and phone width), no JS errors, live update | pass (against a mock replay, `docs/img/`) |
+| Running on your board, sensors, relay, pump | **not yet: that is iteration v0.5** |
 
 `data/synthetic/` is **simulated**, only there so the pipeline and CI can run before you have measurements. Never quote numbers from it.
 

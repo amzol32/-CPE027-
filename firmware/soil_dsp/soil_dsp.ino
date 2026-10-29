@@ -73,7 +73,7 @@ float awetCnt[3] = {1300, 1300, 1300};
 bool  calDry = false, calWet = false;
 
 dsp::Params P;
-dsp::Pipeline<5, 10> pipe(ALPHA);
+dsp::Pipeline<5, 10> dspPipe(ALPHA);
 dsp::Controller ctl;
 dsp::ToggleCounter tog[4] = {dsp::ToggleCounter(35, 0), dsp::ToggleCounter(35, 0),
                              dsp::ToggleCounter(35, 0), dsp::ToggleCounter(35, 0)};
@@ -133,7 +133,7 @@ static void applyThreshold() {
 }
 
 static void resetFilters() {
-  pipe.reset();
+  dspPipe.reset();
   for (int i = 0; i < 4; i++) tog[i].reset();
   haveValid = false;
   warmupUntil = sampleN + WARMUP_S;
@@ -252,7 +252,7 @@ static void tick(uint32_t tms) {
   }
   haveValid = true;
 
-  lastOut = pipe.update(m[0], m[1], m[2]);
+  lastOut = dspPipe.update(m[0], m[1], m[2]);
   tog[0].update(lastIdx[0]);       // raw sensor 1 (not blanked) - the report's "raw" reference
   tog[1].update(lastOut.x);
   tog[2].update(lastOut.yma);

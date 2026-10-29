@@ -15,7 +15,7 @@
 | v0.1 | Baseline read-out | `firmware/legacy_readout`: three sensors on the TFT, relay test | Your original sketch (done) |
 | v0.2 | DSP core | `dsp.h` + unit tests | `make unit` passes (done) |
 | v0.3 | Analysis tooling | `analyze_log.py`, `dsp_ref.py`, crosscheck, synthetic data | `make synth crosscheck` passes (done) |
-| v0.4 | Firmware pipeline + dashboard | `soil_dsp.ino`, `dashboard.h`, host simulation | `make sim` passes (done); compiles in CI |
+| v0.4 | Firmware pipeline + dashboard | `soil_dsp.ino`, `dashboard.h`, host simulation | `make sim` passes, compiles for ESP32-S3 with 0 warnings, dashboard checked in a browser (done) |
 | v0.5 | Hardware bring-up | Firmware flashed; all three sensors reading; calibrated; dashboard loads | Test 1 log + `calibration.json` committed |
 | v0.6 | Evidence | Tests 2, 3, 4 logged and analysed | `results/` tables and figures generated from real logs |
 | v1.0 | Report freeze | Report filled from `results/`, slides updated | Every `[ ]` filled from a measured number; no synthetic data quoted |
